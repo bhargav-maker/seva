@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+*.egg-info/
+
+# Environment — NEVER commit API keys
+.env
+
+# Models (large binary files)
+models/
+
+# Temporary session data
+/dev/shm/
+*.wav
+*.tmp
+
+# EasyOCR cache
+~/.EasyOCR/
+
+# OS
+.DS_Store
+Thumbs.db
