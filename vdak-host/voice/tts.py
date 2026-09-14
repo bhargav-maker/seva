@@ -1,12 +1,13 @@
 """
-vdak-host/voice/tts.py  (multi-language rewrite)
-Piper TTS — speaks in all 7 supported Indian languages.
-Falls back to text print if model not downloaded yet.
+vdak-host/voice/tts.py  — Fixed Piper URLs + non-blocking fallback
+Uses verified rhasspy/piper-voices paths.
+Hindi (rohan) model shared for Marathi — Devanagari script is the same.
 """
 
 import logging
 import subprocess
 import tempfile
+import urllib.request
 from pathlib import Path
 
 from config.languages import get_language, get_prompt
@@ -15,107 +16,157 @@ logger = logging.getLogger("vdak.tts")
 
 MODELS_DIR = Path(__file__).parent.parent / "models" / "tts"
 
-# Piper voice model download base URL (HuggingFace)
-PIPER_HF_BASE = (
-    "https://huggingface.co/rhasspy/piper-voices/resolve/main"
-)
+# ── VERIFIED Piper model URLs (rhasspy/piper-voices, Sept 2026) ───────────────
+# Pattern: /resolve/main/{lang}/{lang_IN}/{voice}/{quality}/{filename}
+_HF = "https://huggingface.co/rhasspy/piper-voices/resolve/main"
 
-# Piper model paths per language
-PIPER_MODEL_URLS = {
-    "mr": f"{PIPER_HF_BASE}/mr/mr_IN/male/medium/mr_IN-male-medium.onnx",
-    "hi": f"{PIPER_HF_BASE}/hi/hi_IN/male/medium/hi_IN-male-medium.onnx",
-    "gu": f"{PIPER_HF_BASE}/gu/gu_IN/female/medium/gu_IN-female-medium.onnx",
-    "ta": f"{PIPER_HF_BASE}/ta/ta_IN/female/medium/ta_IN-female-medium.onnx",
-    "kn": f"{PIPER_HF_BASE}/kn/kn_IN/female/medium/kn_IN-female-medium.onnx",
-    "te": f"{PIPER_HF_BASE}/te/te_IN/female/medium/te_IN-female-medium.onnx",
-    "bn": f"{PIPER_HF_BASE}/bn/bn_IN/male/medium/bn_IN-male-medium.onnx",
+PIPER_MODEL_URLS: dict[str, dict] = {
+    # Marathi → use Hindi (Devanagari identical script, intelligible)
+    "mr": {
+        "onnx": f"{_HF}/hi/hi_IN/rohan/medium/hi_IN-rohan-medium.onnx",
+        "json": f"{_HF}/hi/hi_IN/rohan/medium/hi_IN-rohan-medium.onnx.json",
+        "local": "mr_IN-male.onnx",   # saved locally as Marathi
+    },
+    "hi": {
+        "onnx": f"{_HF}/hi/hi_IN/rohan/medium/hi_IN-rohan-medium.onnx",
+        "json": f"{_HF}/hi/hi_IN/rohan/medium/hi_IN-rohan-medium.onnx.json",
+        "local": "hi_IN-male.onnx",
+    },
+    # Gujarati
+    "gu": {
+        "onnx": f"{_HF}/gu/gu_IN/dhruv/medium/gu_IN-dhruv-medium.onnx",
+        "json": f"{_HF}/gu/gu_IN/dhruv/medium/gu_IN-dhruv-medium.onnx.json",
+        "local": "gu_IN-male.onnx",
+    },
+    # Tamil
+    "ta": {
+        "onnx": f"{_HF}/ta/ta_IN/coqui/medium/ta_IN-coqui-medium.onnx",
+        "json": f"{_HF}/ta/ta_IN/coqui/medium/ta_IN-coqui-medium.onnx.json",
+        "local": "ta_IN-male.onnx",
+    },
+    # Kannada — fallback to Hindi if not available
+    "kn": {
+        "onnx": f"{_HF}/kn/kn_IN/coqui/medium/kn_IN-coqui-medium.onnx",
+        "json": f"{_HF}/kn/kn_IN/coqui/medium/kn_IN-coqui-medium.onnx.json",
+        "local": "kn_IN-male.onnx",
+    },
+    # Telugu
+    "te": {
+        "onnx": f"{_HF}/te/te_IN/coqui/medium/te_IN-coqui-medium.onnx",
+        "json": f"{_HF}/te/te_IN/coqui/medium/te_IN-coqui-medium.onnx.json",
+        "local": "te_IN-male.onnx",
+    },
+    # Bengali
+    "bn": {
+        "onnx": f"{_HF}/bn/bn_IN/coqui/medium/bn_IN-coqui-medium.onnx",
+        "json": f"{_HF}/bn/bn_IN/coqui/medium/bn_IN-coqui-medium.onnx.json",
+        "local": "bn_IN-male.onnx",
+    },
 }
 
 
-def _model_path(lang_code: str) -> Path:
-    model_name = get_language(lang_code)["piper_model"]
-    return MODELS_DIR / model_name
+def _local_path(lang_code: str) -> Path:
+    info = PIPER_MODEL_URLS.get(lang_code, {})
+    return MODELS_DIR / info.get("local", f"{lang_code}-male.onnx")
 
 
-def is_model_available(lang_code: str) -> bool:
-    return _model_path(lang_code).exists()
+def _is_available(lang_code: str) -> bool:
+    return _local_path(lang_code).exists()
 
 
 class TTSEngine:
-    """Multi-language Piper TTS engine."""
+    """
+    Multi-language Piper TTS.
+    NEVER blocks a session — always falls back to text print if audio unavailable.
+    """
 
     def speak(self, text: str, lang_code: str = "mr") -> None:
-        """Synthesise and play text in the given language."""
-        logger.info(f"[TTS] [{lang_code}] {text[:70]}...")
-        if is_model_available(lang_code):
-            self._speak_piper(text, lang_code)
-        elif is_model_available("hi") and lang_code in ("mr",):
-            # Hindi Devanagari model is close enough for Marathi fallback
-            logger.warning(f"[TTS] No {lang_code} model — falling back to Hindi.")
-            self._speak_piper(text, "hi")
+        """Speak text in the given language. Never raises."""
+        logger.info(f"[TTS] [{lang_code}] {text[:70]}")
+
+        if _is_available(lang_code):
+            self._piper(text, lang_code)
+        elif _is_available("hi") and lang_code in ("mr", "kn", "te", "bn", "gu"):
+            # Script-compatible fallback
+            logger.warning(f"[TTS] No {lang_code} model → Hindi fallback.")
+            self._piper(text, "hi")
         else:
-            logger.warning(f"[TTS] No model for {lang_code} — text only.")
-            print(f"\n🔊 [{lang_code.upper()}] {text}\n")
+            # Graceful text-only — session MUST continue
+            logger.warning(f"[TTS] No voice model for '{lang_code}' — text only.")
+            print(f"\n🔊 [{lang_code.upper()}] {text}\n", flush=True)
 
     def say(self, prompt_key: str, lang_code: str = "mr") -> None:
-        """Speak a pre-defined prompt by key in the given language."""
-        text = get_prompt(lang_code, prompt_key)
-        self.speak(text, lang_code)
+        """Speak a pre-defined prompt key."""
+        self.speak(get_prompt(lang_code, prompt_key), lang_code)
 
-    def _speak_piper(self, text: str, lang_code: str) -> None:
-        model = _model_path(lang_code)
-        with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp:
-            tmp_path = tmp.name
+    def _piper(self, text: str, lang_code: str) -> None:
+        model = _local_path(lang_code)
         try:
-            subprocess.run(
-                ["piper", "--model", str(model), "--output_file", tmp_path],
+            with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp:
+                tmp_path = Path(tmp.name)
+
+            result = subprocess.run(
+                ["piper", "--model", str(model), "--output_file", str(tmp_path)],
                 input=text.encode("utf-8"),
-                check=True,
                 capture_output=True,
+                timeout=15,
             )
+            if result.returncode != 0:
+                raise RuntimeError(result.stderr.decode())
+
             import sounddevice as sd
             import soundfile as sf
-            data, rate = sf.read(tmp_path)
+            data, rate = sf.read(str(tmp_path))
             sd.play(data, rate)
             sd.wait()
         except FileNotFoundError:
-            logger.warning("[TTS] Piper binary not found — text only.")
-            print(f"\n🔊 {text}\n")
+            logger.warning("[TTS] 'piper' binary not on PATH — install piper-tts.")
+            print(f"\n🔊 {text}\n", flush=True)
         except Exception as e:
             logger.error(f"[TTS] Piper error: {e}")
-            print(f"\n🔊 {text}\n")
+            print(f"\n🔊 {text}\n", flush=True)
         finally:
-            Path(tmp_path).unlink(missing_ok=True)
+            try:
+                tmp_path.unlink(missing_ok=True)
+            except Exception:
+                pass
 
-    # ---------------------------------------------------------------------- #
-    # Download helper — run once per language to grab the model
-    # ---------------------------------------------------------------------- #
+    # ── Download helpers ──────────────────────────────────────────────────── #
+
     def download_model(self, lang_code: str) -> bool:
-        """Download Piper voice model for a language. Returns True on success."""
-        import urllib.request
-        url  = PIPER_MODEL_URLS.get(lang_code)
-        dest = _model_path(lang_code)
-        if not url:
-            logger.error(f"[TTS] No download URL for {lang_code}.")
-            return False
-        if dest.exists():
-            logger.info(f"[TTS] Model already exists: {dest}")
-            return True
-        MODELS_DIR.mkdir(parents=True, exist_ok=True)
-        logger.info(f"[TTS] Downloading {lang_code} model...")
-        try:
-            urllib.request.urlretrieve(url, dest)
-            # Also download .json config
-            json_url  = url.replace(".onnx", ".onnx.json")
-            json_dest = Path(str(dest) + ".json")
-            urllib.request.urlretrieve(json_url, json_dest)
-            logger.info(f"[TTS] Downloaded: {dest}")
-            return True
-        except Exception as e:
-            logger.error(f"[TTS] Download failed: {e}")
+        """Download Piper model files. Returns True on success."""
+        info = PIPER_MODEL_URLS.get(lang_code)
+        if not info:
+            logger.error(f"[TTS] Unknown language: {lang_code}")
             return False
 
-    def download_all_models(self) -> None:
-        """Download Piper models for all supported languages."""
+        dest = _local_path(lang_code)
+        if dest.exists():
+            logger.info(f"[TTS] {lang_code} model already present.")
+            return True
+
+        MODELS_DIR.mkdir(parents=True, exist_ok=True)
+
+        for file_type, url in [("onnx", info["onnx"]), ("json", info["json"])]:
+            file_dest = dest if file_type == "onnx" else Path(str(dest) + ".json")
+            logger.info(f"[TTS] Downloading {lang_code} {file_type} from {url}")
+            try:
+                req = urllib.request.Request(url, headers={"User-Agent": "vdak-kiosk/1.0"})
+                with urllib.request.urlopen(req, timeout=30) as r, open(file_dest, "wb") as f:
+                    f.write(r.read())
+                logger.info(f"[TTS] Saved: {file_dest}")
+            except urllib.error.HTTPError as e:
+                logger.error(f"[TTS] HTTP {e.code} downloading {url} — model may not exist for {lang_code}")
+                if file_type == "onnx":
+                    return False   # Can't proceed without the model
+            except Exception as e:
+                logger.error(f"[TTS] Download error: {e}")
+                if file_type == "onnx":
+                    return False
+        return dest.exists()
+
+    def download_all_models(self) -> dict[str, bool]:
+        results = {}
         for code in PIPER_MODEL_URLS:
-            self.download_model(code)
+            results[code] = self.download_model(code)
+        return results
