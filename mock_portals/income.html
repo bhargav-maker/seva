@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>आपले सरकार - उत्पन्नाचा दाखला (Income Certificate)</title>
+  <style>
+    @keyframes cdp_heartbeat { 0% { opacity: 0.999; } 50% { opacity: 1; } 100% { opacity: 0.999; } }
+    :root {
+      --bg-dark: #0f172a;
+      --surface-dark: #1e293b;
+      --border-dark: #334155;
+      --text-light: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent: #0284c7;
+      --accent-hover: #0369a1;
+      --success-bg: #064e3b;
+      --success-border: #059669;
+      --success-text: #6ee7b7;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 24px;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: var(--bg-dark);
+      color: var(--text-light);
+      line-height: 1.5;
+      animation: cdp_heartbeat 1s infinite linear;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid var(--accent);
+      padding-bottom: 14px;
+      margin-bottom: 24px;
+    }
+    .logo {
+      font-size: 22px;
+      font-weight: 700;
+      color: #38bdf8;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .tag {
+      background: #0369a1;
+      color: #fff;
+      padding: 6px 14px;
+      border-radius: 9999px;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+    .card {
+      background: var(--surface-dark);
+      border-radius: 12px;
+      padding: 28px;
+      border: 1px solid var(--border-dark);
+      max-width: 800px;
+      margin: 0 auto;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+    }
+    h2 {
+      margin-top: 0;
+      margin-bottom: 20px;
+      color: #f1f5f9;
+      font-size: 20px;
+      border-bottom: 1px solid var(--border-dark);
+      padding-bottom: 12px;
+    }
+    .form-group {
+      margin-bottom: 18px;
+    }
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+    input, select {
+      width: 100%;
+      padding: 12px 16px;
+      border-radius: 8px;
+      border: 1px solid #475569;
+      background: #090d16;
+      color: #ffffff;
+      font-size: 16px;
+      min-height: 48px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    input:focus, select:focus {
+      border-color: #38bdf8;
+      box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.25);
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--accent);
+      color: #ffffff;
+      font-weight: 600;
+      padding: 14px 28px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+      min-height: 52px;
+      width: 100%;
+      margin-top: 14px;
+      transition: background-color 0.2s;
+    }
+    .btn:hover {
+      background: var(--accent-hover);
+    }
+    .success-box {
+      display: none;
+      margin-top: 22px;
+      padding: 18px;
+      background: var(--success-bg);
+      border: 1px solid var(--success-border);
+      border-radius: 8px;
+      color: var(--success-text);
+      font-weight: 600;
+      font-size: 15px;
+    }
+    .receipt-badge {
+      display: block;
+      margin-top: 8px;
+      font-size: 14px;
+      font-family: monospace;
+      color: #a7f3d0;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo">🏛️ आपले सरकार e-Services (महाराष्ट्र शासन)</div>
+    <div class="tag">सेतू केंद्र सेवा टोकन: #MH-2026-9921</div>
+  </div>
+
+  <div class="card">
+    <h2>तहसीलदार कार्यालय: उत्पन्नाचा दाखला अर्ज (Income Certificate)</h2>
+
+    <div class="form-group">
+      <label for="applicant_name">अर्जदाराचे संपूर्ण नाव (Applicant Full Name):</label>
+      <input type="text" id="applicant_name" name="applicant_name" placeholder="नाव प्रविष्ट करा..." autocomplete="off" />
+    </div>
+
+    <div class="form-group">
+      <label for="annual_income">वार्षिक उत्पन्न ₹ (Annual Income in INR):</label>
+      <input type="number" id="annual_income" name="annual_income" placeholder="वार्षिक उत्पन्न (उदा. ५००००)..." min="0" />
+    </div>
+
+    <div class="form-group">
+      <label for="jurisdiction_select">तालुका महसूल अधिकारक्षेत्र (Jurisdiction Tahsil):</label>
+      <select id="jurisdiction_select" name="jurisdiction">
+        <option value="">-- तालुका निवडा --</option>
+        <option value="haveli" selected>हवेली तालुका (पुणे)</option>
+        <option value="baramati">बारामती तालुका</option>
+        <option value="shirur">शिरूर तालुका</option>
+        <option value="ambegaon">आंबेगाव तालुका</option>
+        <option value="khed">खेड तालुका</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="purpose_select">दाखल्याचा उद्देश (Purpose of Certificate):</label>
+      <select id="purpose_select" name="purpose">
+        <option value="education" selected>शैक्षणिक शिष्यवृत्ती (Scholarship / Admission)</option>
+        <option value="scheme">शासकीय अनुदान योजना (Government Scheme)</option>
+        <option value="ration">रेशन कार्ड नाव नोंदणी (Ration Card)</option>
+      </select>
+    </div>
+
+    <button type="button" class="btn" id="submit_btn" onclick="submitApp()">अर्ज पडताळा आणि सादर करा (Submit)</button>
+
+    <div class="success-box" id="success_msg">
+      <div>✅ आपले सरकार: अर्ज यशस्वीपणे दाखल झाला!</div>
+      <span class="receipt-badge">पावती क्रमांक: SEVA-INC-2026-88712</span>
+    </div>
+  </div>
+
+  <script>
+    function submitApp() {
+      var name = document.getElementById('applicant_name').value.trim();
+      var income = document.getElementById('annual_income').value.trim();
+      var msgBox = document.getElementById('success_msg');
+      msgBox.style.display = 'block';
+    }
+  </script>
+</body>
+</html>

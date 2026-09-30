@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>सार्वजनिक वितरण प्रणाली - AePDS (Food & Civil Supplies Ration Services)</title>
+  <style>
+    @keyframes cdp_heartbeat { 0% { opacity: 0.999; } 50% { opacity: 1; } 100% { opacity: 0.999; } }
+    :root {
+      --bg-dark: #0f172a;
+      --surface-dark: #1e293b;
+      --border-dark: #334155;
+      --text-light: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent: #ca8a04;
+      --accent-hover: #a16207;
+      --success-bg: #422006;
+      --success-border: #a16207;
+      --success-text: #fde047;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 24px;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: var(--bg-dark);
+      color: var(--text-light);
+      line-height: 1.5;
+      animation: cdp_heartbeat 1s infinite linear;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid var(--accent);
+      padding-bottom: 14px;
+      margin-bottom: 24px;
+    }
+    .logo {
+      font-size: 22px;
+      font-weight: 700;
+      color: #facc15;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .tag {
+      background: #713f12;
+      color: #fef08a;
+      padding: 6px 14px;
+      border-radius: 9999px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .card {
+      background: var(--surface-dark);
+      border-radius: 12px;
+      padding: 28px;
+      border: 1px solid var(--border-dark);
+      max-width: 800px;
+      margin: 0 auto;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+    }
+    h2 {
+      margin-top: 0;
+      margin-bottom: 20px;
+      color: #f1f5f9;
+      font-size: 20px;
+      border-bottom: 1px solid var(--border-dark);
+      padding-bottom: 12px;
+    }
+    .form-group {
+      margin-bottom: 18px;
+    }
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+    input, select {
+      width: 100%;
+      padding: 12px 16px;
+      border-radius: 8px;
+      border: 1px solid #475569;
+      background: #090d16;
+      color: #ffffff;
+      font-size: 16px;
+      min-height: 48px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    input:focus, select:focus {
+      border-color: #facc15;
+      box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.25);
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--accent);
+      color: #ffffff;
+      font-weight: 600;
+      padding: 14px 28px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+      min-height: 52px;
+      width: 100%;
+      margin-top: 14px;
+      transition: background-color 0.2s;
+    }
+    .btn:hover {
+      background: var(--accent-hover);
+    }
+    .success-box {
+      display: none;
+      margin-top: 22px;
+      padding: 18px;
+      background: var(--success-bg);
+      border: 1px solid var(--success-border);
+      border-radius: 8px;
+      color: var(--success-text);
+      font-weight: 600;
+      font-size: 15px;
+    }
+    .ration-table {
+      margin-top: 12px;
+      border-collapse: collapse;
+      width: 100%;
+      font-size: 14px;
+    }
+    .ration-table th, .ration-table td {
+      border: 1px solid #713f12;
+      padding: 8px 12px;
+      text-align: left;
+    }
+    .ration-table th {
+      background: #2e1a06;
+      color: #fef08a;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo">🍚 अन्न, नागरी पुरवठा व ग्राहक संरक्षण विभाग</div>
+    <div class="tag">राष्ट्रीय अन्न सुरक्षा योजना (NFSA)</div>
+  </div>
+
+  <div class="card">
+    <h2>सार्वजनिक वितरण प्रणाली (AePDS): रेशन कार्ड पात्रता व धान्य कोटा तपासणी</h2>
+
+    <div class="form-group">
+      <label for="ration_card_no">रेशन कार्ड क्रमांक (Ration Card Number):</label>
+      <input type="text" id="ration_card_no" name="ration_card_no" placeholder="१२ अंकी रेशन कार्ड क्रमांक प्रविष्ट करा..." autocomplete="off" />
+    </div>
+
+    <div class="form-group">
+      <label for="fps_id">रास्त भाव धान्य दुकान क्रमांक (FPS ID):</label>
+      <input type="text" id="fps_id" name="fps_id" placeholder="दुकान क्रमांक (उदा. FPS-PUN-042)..." autocomplete="off" />
+    </div>
+
+    <div class="form-group">
+      <label for="month_select">महिना निवडा (Allocation Month):</label>
+      <select id="month_select" name="month">
+        <option value="current" selected>चालू महिना (सप्टेंबर २०२६)</option>
+        <option value="next">पुढील महिना</option>
+      </select>
+    </div>
+
+    <button type="button" class="btn" id="check_ration_btn" onclick="checkRation()">धान्य कोटा तपासा</button>
+
+    <div class="success-box" id="ration_status">
+      <div>🍚 सार्वजनिक वितरण प्रणाली: मासिक धान्य वाटप उपलब्ध आहे.</div>
+      <div style="margin-top:6px; font-weight:normal;">मासिक धान्य वाटप: गहू १५ किलो (₹२), तांदूळ २० किलो (₹३) उपलब्ध.</div>
+      <table class="ration-table">
+        <tr>
+          <th>कमोडिटी</th>
+          <th>मंजूर कोटा</th>
+          <th>दर प्रतिकिलो</th>
+          <th>एकूण देय</th>
+        </tr>
+        <tr>
+          <td>गहू (Wheat)</td>
+          <td>१५ किलो</td>
+          <td>₹ २.००</td>
+          <td>₹ ३०.००</td>
+        </tr>
+        <tr>
+          <td>तांदूळ (Rice)</td>
+          <td>२० किलो</td>
+          <td>₹ ३.००</td>
+          <td>₹ ६०.००</td>
+        </tr>
+      </table>
+      <div style="margin-top:10px; font-size:13px; color:#cbd5e1;">बायोमेट्रिक प्रमाणीकरण स्थिती: आधार पडताळणी पूर्ण (Aadhaar Verified)</div>
+    </div>
+  </div>
+
+  <script>
+    function checkRation() {
+      document.getElementById('ration_status').style.display = 'block';
+    }
+  </script>
+</body>
+</html>
