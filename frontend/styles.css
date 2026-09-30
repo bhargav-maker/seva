@@ -1,0 +1,400 @@
+/* ==========================================================================
+   SEVA AI Kiosk Platform - Custom Stylesheet
+   Designed for Touch-First Rural Kiosk Terminals (Setu Kendras / Gram Panchayats)
+   WCAG AAA High Contrast & Large Touch Target Guidelines
+   ========================================================================== */
+
+:root {
+  /* WCAG AAA High Contrast Theme Palette (Daylight Visibility in Rural Centers) */
+  --bg-primary: #0f172a;        /* Deep navy slate (background) */
+  --bg-surface: #1e293b;        /* Surface slate */
+  --bg-surface-elevated: #334155;
+  --bg-input: #090d16;
+  --text-primary: #f8fafc;      /* High contrast pure white text */
+  --text-secondary: #94a3b8;    /* Muted label text */
+  --text-dim: #64748b;
+  
+  --accent-primary: #0284c7;    /* Vibrant sky blue */
+  --accent-hover: #0369a1;
+  --accent-glow: rgba(2, 132, 199, 0.45);
+  --accent-highlight: #38bdf8;
+  
+  --success: #10b981;           /* Emerald green */
+  --success-bg: rgba(16, 185, 129, 0.15);
+  --warning: #f59e0b;           /* Amber warning */
+  --warning-bg: rgba(245, 158, 11, 0.15);
+  --danger: #ef4444;            /* Red danger / data purge */
+  --danger-bg: rgba(239, 68, 68, 0.15);
+  
+  /* Touch Target Dimensions (F15 Constraints) */
+  --touch-min-dimension: 48px;
+  --touch-primary-height: 64px;
+  --touch-ptt-diameter: 88px;
+  --touch-keypad-height: 56px;
+}
+
+/* Base Terminal Reset & Kiosk Lockdown */
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Noto Sans Devanagari";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  touch-action: manipulation;
+  -webkit-user-select: none;
+  user-select: none;
+  overflow-x: hidden;
+}
+
+/* Ensure focus states are clearly visible for accessibility */
+button:focus-visible, input:focus-visible, select:focus-visible {
+  outline: 3px solid var(--accent-highlight) !important;
+  outline-offset: 2px !important;
+}
+
+/* Minimum Touch Target Enforcement */
+button, .touch-btn, .touch-chip, input, select {
+  min-height: var(--touch-min-dimension);
+  min-width: var(--touch-min-dimension);
+}
+
+/* Primary Action Buttons (64px - 80px) */
+.btn-primary-action {
+  min-height: var(--touch-primary-height);
+  font-size: 1.125rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.75rem;
+  transition: all 0.15s ease-in-out;
+}
+
+.btn-primary-action:active {
+  transform: scale(0.97);
+}
+
+/* Prominent Push-to-Talk (PTT) Circular Button (Minimum 80px diameter, here 88px) */
+.btn-ptt {
+  width: var(--touch-ptt-diameter);
+  height: var(--touch-ptt-diameter);
+  min-width: var(--touch-ptt-diameter);
+  min-height: var(--touch-ptt-diameter);
+  border-radius: 9999px;
+  background: radial-gradient(circle, #0284c7 0%, #0369a1 100%);
+  color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 20px var(--accent-glow), 0 8px 16px rgba(0, 0, 0, 0.4);
+  border: 3px solid #38bdf8;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s ease-in-out;
+}
+
+.btn-ptt:hover {
+  background: radial-gradient(circle, #0ea5e9 0%, #0284c7 100%);
+  transform: translateY(-2px);
+}
+
+.btn-ptt:active {
+  transform: scale(0.95);
+}
+
+/* PTT Listening State & Pulse Ripple Animation */
+.btn-ptt.listening {
+  background: radial-gradient(circle, #ef4444 0%, #b91c1c 100%) !important;
+  border-color: #f87171 !important;
+  box-shadow: 0 0 35px rgba(239, 68, 68, 0.7), 0 8px 16px rgba(0, 0, 0, 0.5) !important;
+  animation: ptt-ripple 1.2s infinite ease-out;
+}
+
+@keyframes ptt-ripple {
+  0% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.75), 0 0 20px rgba(239, 68, 68, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 22px rgba(239, 68, 68, 0), 0 0 30px rgba(239, 68, 68, 0.8);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0), 0 0 20px rgba(239, 68, 68, 0.4);
+  }
+}
+
+/* Quick Touch-Chip Prompts */
+.touch-chip {
+  min-height: 48px;
+  padding: 0.5rem 1rem;
+  border-radius: 9999px;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--bg-surface-elevated);
+  color: var(--text-primary);
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.touch-chip:hover {
+  border-color: var(--accent-highlight);
+  background-color: var(--bg-surface-elevated);
+}
+
+.touch-chip:active {
+  transform: scale(0.96);
+  background-color: var(--accent-primary);
+}
+
+/* Viewport 16:9 Stream Display & Canvas Reticle Overlay */
+.stream-container {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background-color: #000000;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  border: 2px solid #334155;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+.stream-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.reticle-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 20;
+}
+
+/* Real-Time ODAV Status Badges (F18 Visual Status Badges) */
+.badge-success {
+  background-color: var(--success-bg);
+  border: 1px solid var(--success);
+  color: #6ee7b7;
+}
+
+.badge-warning {
+  background-color: var(--warning-bg);
+  border: 1px solid var(--warning);
+  color: #fcd34d;
+}
+
+.badge-danger {
+  background-color: var(--danger-bg);
+  border: 1px solid var(--danger);
+  color: #fca5a5;
+}
+
+.badge-info {
+  background-color: rgba(2, 132, 199, 0.15);
+  border: 1px solid #0284c7;
+  color: #7dd3fc;
+}
+
+/* Phase Badges (Observe, Decide, Act, Verify) */
+.badge-phase-observe {
+  background: rgba(14, 165, 233, 0.2);
+  border: 1px solid #38bdf8;
+  color: #38bdf8;
+}
+
+.badge-phase-decide {
+  background: rgba(168, 85, 247, 0.2);
+  border: 1px solid #c084fc;
+  color: #c084fc;
+}
+
+.badge-phase-act {
+  background: rgba(245, 158, 11, 0.2);
+  border: 1px solid #fbbf24;
+  color: #fbbf24;
+}
+
+.badge-phase-verify {
+  background: rgba(16, 185, 129, 0.2);
+  border: 1px solid #34d399;
+  color: #34d399;
+}
+
+/* Virtual Numeric Keypad (F15 & F19 Touch Keypad) */
+.keypad-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.keypad-btn {
+  height: var(--touch-keypad-height);
+  min-height: var(--touch-keypad-height);
+  font-size: 1.5rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.75rem;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--bg-surface-elevated);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.1s ease-in-out;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+}
+
+.keypad-btn:active {
+  background-color: var(--accent-primary);
+  color: #ffffff;
+  transform: scale(0.94);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.keypad-btn-action {
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.keypad-btn-clear {
+  color: #f87171;
+  background-color: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.keypad-btn-back {
+  color: #fbbf24;
+  background-color: rgba(245, 158, 11, 0.1);
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
+/* Step Budget Segment Indicator (F13 & M4 visual meter) */
+.step-segment {
+  height: 10px;
+  flex: 1;
+  border-radius: 9999px;
+  background-color: #334155;
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.step-segment.active {
+  background-color: #38bdf8;
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.6);
+}
+
+.step-segment.completed {
+  background-color: #10b981;
+}
+
+.step-segment.warning {
+  background-color: #f59e0b;
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.6);
+}
+
+/* Ephemeral Data Purge Button */
+.btn-purge {
+  min-height: var(--touch-min-dimension);
+  background-color: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.5);
+  color: #fca5a5;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-purge:hover {
+  background-color: #ef4444;
+  color: #ffffff;
+  border-color: #ef4444;
+}
+
+.btn-purge:active {
+  transform: scale(0.96);
+}
+
+/* Modal Dialog Overlay & Card */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 1rem;
+}
+
+.modal-card {
+  background-color: var(--bg-surface);
+  border: 2px solid var(--accent-highlight);
+  border-radius: 1rem;
+  width: 100%;
+  max-width: 480px;
+  padding: 1.5rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+  animation: modal-pop 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modal-pop {
+  0% { transform: scale(0.92); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* Audio Waveform Indicator for TTS Speaking */
+.audio-waves {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  height: 18px;
+}
+
+.audio-waves span {
+  display: inline-block;
+  width: 4px;
+  height: 100%;
+  background-color: #38bdf8;
+  border-radius: 2px;
+  animation: wave-bar 1s infinite ease-in-out;
+}
+
+.audio-waves span:nth-child(2) { animation-delay: 0.2s; }
+.audio-waves span:nth-child(3) { animation-delay: 0.4s; }
+.audio-waves span:nth-child(4) { animation-delay: 0.6s; }
+
+@keyframes wave-bar {
+  0%, 100% { height: 4px; }
+  50% { height: 18px; }
+}
+
+/* Custom Scrollbar for Audit Feed */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0f172a;
+}
+::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}

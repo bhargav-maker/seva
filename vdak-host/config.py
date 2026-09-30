@@ -15,8 +15,8 @@ class Settings(BaseSettings):
     DEBUG: bool = False
 
     # Inference Brain (OpenRouter)
-    OPENROUTER_API_KEY: str = os.getenv("OPENROUTER_API_KEY", "")
-    OPENROUTER_MODEL: str = os.getenv("OPENROUTER_MODEL", "qwen/qwen-2.5-7b-instruct")
+    OPENROUTER_API_KEY: str = os.getenv("OPENROUTER_API_KEY", "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")
+    OPENROUTER_MODEL: str = os.getenv("OPENROUTER_MODEL", "openrouter/free")
     INFERENCE_TIMEOUT_SEC: float = 8.0
 
     # ODAV Invariants & Guardrails

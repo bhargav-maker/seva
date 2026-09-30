@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>SEVA AI - ग्रामपंचायत व सेतू केंद्र डिजिटल सहाय्यक</title>
+  
+  <!-- Tailwind CSS CDN for rural kiosk styling -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Custom High-Contrast WCAG AAA & Kiosk Touch Styles -->
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body class="bg-slate-900 text-slate-50 flex flex-col min-h-screen select-none">
+
+  <!-- Top Navigation & Status Bar -->
+  <header class="bg-slate-800 border-b border-slate-700 px-6 py-3 flex flex-wrap items-center justify-between gap-4 sticky top-0 z-50 shadow-md">
+    <!-- Brand & Location -->
+    <div class="flex items-center gap-3">
+      <div class="w-12 h-12 rounded-xl bg-sky-600 flex items-center justify-center text-2xl shadow-inner font-bold text-white">
+        🏛️
+      </div>
+      <div>
+        <h1 class="text-xl font-bold tracking-tight text-white flex items-center gap-2">
+          SEVA AI <span class="text-xs px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-400 border border-sky-400/30">ग्रामपंचायत / सेतू केंद्र</span>
+        </h1>
+        <p class="text-xs text-slate-400" id="header-subtitle">
+          महाराष्ट्र शासन नागरिक ई-सेवा व्हॉईस असिस्टंट
+        </p>
+      </div>
+    </div>
+
+    <!-- Right Controls: Language Selector & Data Purge -->
+    <div class="flex items-center gap-3 flex-wrap">
+      <!-- Language Switcher Chips -->
+      <div class="flex bg-slate-900 p-1 rounded-xl border border-slate-700" id="lang-switchers">
+        <button type="button" data-lang="mr-IN" id="lang-mr" class="lang-btn min-h-[48px] px-4 rounded-lg font-bold text-sm bg-sky-600 text-white shadow transition-all">
+          मराठी
+        </button>
+        <button type="button" data-lang="hi-IN" id="lang-hi" class="lang-btn min-h-[48px] px-4 rounded-lg font-bold text-sm text-slate-300 hover:text-white transition-all">
+          हिंदी
+        </button>
+        <button type="button" data-lang="en-IN" id="lang-en" class="lang-btn min-h-[48px] px-4 rounded-lg font-bold text-sm text-slate-300 hover:text-white transition-all">
+          English
+        </button>
+      </div>
+
+      <!-- Ephemeral Data Purge Button (DPDP Act Compliance) -->
+      <button type="button" id="purge-btn" class="btn-purge min-h-[48px] px-4 text-sm" title="तातडीने सर्व डेटा नष्ट करा">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+        </svg>
+        <span id="purge-btn-text">डेटा नष्ट करा (Purge)</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Kiosk Dashboard Layout -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+    <!-- LEFT COLUMN: Live Viewport, Speech Controls, & Quick Chips (7 cols) -->
+    <div class="lg:col-span-7 flex flex-col gap-5">
+
+      <!-- Viewport Display Container (16:9 Live Stream + Canvas Reticle) -->
+      <div class="flex flex-col gap-2">
+        <div class="flex items-center justify-between text-xs font-semibold text-slate-400 uppercase tracking-wider px-1">
+          <span class="flex items-center gap-1.5">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span id="viewport-title">थेट स्क्रीन कास्ट (CDP Screencast Viewport)</span>
+          </span>
+          <span id="stream-status" class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">
+            25 FPS | Connected
+          </span>
+        </div>
+
+        <div id="viewport-container" class="stream-container relative">
+          <!-- MJPEG Video Stream (Native CDP Screencast) -->
+          <img id="stream-img" src="/api/stream" alt="Live CDP Screencast Stream" class="stream-image" />
+          
+          <!-- Targeting Reticle Overlay Canvas -->
+          <canvas id="reticle-canvas" width="1280" height="720" class="reticle-canvas"></canvas>
+
+          <!-- Stream Reconnecting Overlay (Hidden by default) -->
+          <div id="stream-reconnect-overlay" class="absolute inset-0 bg-slate-950/80 flex flex-col items-center justify-center gap-3 hidden z-30">
+            <div class="w-10 h-10 border-4 border-sky-500 border-t-transparent rounded-full animate-spin"></div>
+            <p class="text-sm font-semibold text-sky-300" id="reconnect-text">स्ट्रीम पुन्हा जोडत आहे...</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Spoken Feedback Audio Banner -->
+      <div id="voice-feedback-banner" class="bg-slate-800/90 border border-slate-700 rounded-xl p-4 flex items-center justify-between gap-4 shadow-sm">
+        <div class="flex items-center gap-3">
+          <div id="audio-icon-container" class="w-10 h-10 rounded-lg bg-sky-500/20 text-sky-400 flex items-center justify-center text-xl shrink-0">
+            🔊
+          </div>
+          <div>
+            <div class="text-xs text-sky-400 font-semibold uppercase tracking-wider flex items-center gap-2">
+              <span id="feedback-label">सिस्टीम प्रतिसाद (Voice Feedback)</span>
+              <div id="audio-waves" class="audio-waves hidden">
+                <span></span><span></span><span></span><span></span>
+              </div>
+            </div>
+            <p id="feedback-text" class="text-base text-slate-100 font-medium mt-0.5">
+              नमस्कार! मी सेवा एआय आहे. आपल्याला कोणत्या सेवेची आवश्यकता आहे?
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Voice Push-To-Talk & Manual Input Controls -->
+      <div class="bg-slate-800 border border-slate-700 rounded-2xl p-4 md:p-5 shadow-lg flex flex-col gap-4">
+        <div class="flex items-center gap-4">
+          <!-- Prominent Push-to-Talk Circular Button (88px) -->
+          <button type="button" id="mic-btn" class="btn-ptt shrink-0" aria-label="Push to Talk" title="माईक दाबून बोला">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+            </svg>
+          </button>
+
+          <!-- Voice Transcript & Manual Prompt Input -->
+          <div class="flex-1 flex flex-col gap-1.5">
+            <label for="voice-input" class="text-xs text-slate-400 font-semibold" id="input-label">
+              नागरिक मागणी (बोला किंवा प्रविष्ट करा):
+            </label>
+            <div class="relative">
+              <input type="text" id="voice-input" placeholder="उदा. मला उत्पन्नाचा दाखला हवा आहे..." 
+                     class="w-full min-h-[52px] px-4 rounded-xl bg-slate-900 border border-slate-700 text-white placeholder-slate-500 text-base focus:border-sky-400 focus:ring-2 focus:ring-sky-500/20 outline-none" />
+              <button type="button" id="clear-input-btn" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white p-1 text-sm hidden">
+                ✕
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Dispatch Buttons (Primary 64px Touch Height) -->
+        <div class="grid grid-cols-2 gap-3 pt-2">
+          <button type="button" id="start-btn" class="btn-primary-action min-h-[64px] bg-sky-600 hover:bg-sky-500 text-white shadow-lg shadow-sky-600/30 flex items-center justify-center gap-2">
+            <span>🚀</span>
+            <span id="start-btn-text">सुरू करा (Start Service)</span>
+          </button>
+          <button type="button" id="reset-btn" class="btn-primary-action min-h-[64px] bg-slate-700 hover:bg-slate-600 text-slate-200 border border-slate-600 flex items-center justify-center gap-2">
+            <span>🔄</span>
+            <span id="reset-btn-text">रद्द करा (Reset)</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick Touch-Chip Prompts (Common Maharashtra Governance Tasks) -->
+      <div class="flex flex-col gap-2.5">
+        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider px-1" id="quick-chips-title">
+          त्वरित सेवा निवडा (Quick Touch Prompts):
+        </span>
+        <div id="prompt-chips" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          <!-- 1. Income Certificate -->
+          <button type="button" id="chip-income" data-task="income" data-prompt="मला उत्पन्नाचा दाखला काढायचा आहे" class="touch-chip min-h-[48px] justify-between">
+            <span class="flex items-center gap-2">
+              <span>🏛️</span>
+              <span class="chip-text">उत्पन्नाचा दाखला (Income)</span>
+            </span>
+            <span class="text-xs text-sky-400 font-semibold">निवडा →</span>
+          </button>
+
+          <!-- 2. 7/12 Satbara -->
+          <button type="button" id="chip-satbara" data-task="satbara" data-prompt="आमच्या शेताचा सातबारा उतारा दाखवा" class="touch-chip min-h-[48px] justify-between">
+            <span class="flex items-center gap-2">
+              <span>🌾</span>
+              <span class="chip-text">७/१२ सातबारा (Satbara)</span>
+            </span>
+            <span class="text-xs text-amber-400 font-semibold">निवडा →</span>
+          </button>
+
+          <!-- 3. MahaDBT Farmer Subsidy -->
+          <button type="button" id="chip-mahadbt" data-task="mahadbt" data-prompt="नवीन शेतकरी अनुदानासाठी अर्ज करा" class="touch-chip min-h-[48px] justify-between">
+            <span class="flex items-center gap-2">
+              <span>🚜</span>
+              <span class="chip-text">शेतकरी अनुदान (MahaDBT)</span>
+            </span>
+            <span class="text-xs text-emerald-400 font-semibold">निवडा →</span>
+          </button>
+
+          <!-- 4. Ration Card Services -->
+          <button type="button" id="chip-ration" data-task="ration" data-prompt="माझे रेशन कार्ड पात्रता व धान्य तपासा" class="touch-chip min-h-[48px] justify-between">
+            <span class="flex items-center gap-2">
+              <span>🍚</span>
+              <span class="chip-text">रेशन कार्ड सेवा (Ration)</span>
+            </span>
+            <span class="text-xs text-yellow-400 font-semibold">निवडा →</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+
+    <!-- RIGHT COLUMN: Step Budget Visual Meter & ODAV Real-Time Audit Feed (5 cols) -->
+    <div class="lg:col-span-5 flex flex-col gap-5">
+
+      <!-- Step Budget Visual Indicator (F13 & M4 Hard 8-Step Meter) -->
+      <div class="bg-slate-800 border border-slate-700 rounded-2xl p-5 shadow-lg flex flex-col gap-4" id="step-meter">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="text-lg">⏱️</span>
+            <div>
+              <h2 class="text-sm font-bold text-white uppercase tracking-wider" id="budget-title">
+                पायरी अंदाजपत्रक (Step Budget)
+              </h2>
+              <p class="text-xs text-slate-400" id="budget-subtitle">कमाल ८ पुनरावृत्ती मर्यादा (Max 8 Steps)</p>
+            </div>
+          </div>
+          <!-- Step Counter Value -->
+          <div class="text-right">
+            <span class="text-2xl font-black text-sky-400" id="step-count">0</span>
+            <span class="text-sm font-semibold text-slate-400">/ <span id="max-steps">8</span></span>
+          </div>
+        </div>
+
+        <!-- 8-Segment Step Progress Meter -->
+        <div class="flex items-center gap-1.5" id="step-segments" aria-label="Step progress">
+          <div class="step-segment" data-segment="1"></div>
+          <div class="step-segment" data-segment="2"></div>
+          <div class="step-segment" data-segment="3"></div>
+          <div class="step-segment" data-segment="4"></div>
+          <div class="step-segment" data-segment="5"></div>
+          <div class="step-segment" data-segment="6"></div>
+          <div class="step-segment" data-segment="7"></div>
+          <div class="step-segment" data-segment="8"></div>
+        </div>
+
+        <!-- Session Status & Warning Badges -->
+        <div class="flex items-center justify-between text-xs pt-1 border-t border-slate-700/60">
+          <div class="flex items-center gap-2">
+            <span class="text-slate-400">सत्र (Session):</span>
+            <span id="session-id-display" class="font-mono text-slate-300">निष्क्रिय (Idle)</span>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <!-- Stalled Warning Badge -->
+            <span id="stall-badge" class="badge-warning px-2.5 py-1 rounded-full text-xs font-bold hidden flex items-center gap-1">
+              ⚠️ स्तब्धता (Stalled)
+            </span>
+            <!-- General Status Badge -->
+            <span id="task-status-badge" class="badge-info px-2.5 py-1 rounded-full text-xs font-semibold">
+              तयार (Ready)
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Real-Time ODAV Audit Feed (F18: OBSERVE - DECIDE - ACT - VERIFY) -->
+      <div class="bg-slate-800 border border-slate-700 rounded-2xl p-5 shadow-lg flex-1 flex flex-col min-h-[420px]">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-700">
+          <div class="flex items-center gap-2">
+            <span class="text-lg">📋</span>
+            <h2 class="text-sm font-bold text-white uppercase tracking-wider" id="audit-title">
+              ODAV रिअल-टाइम ऑडिट फीड (Audit Feed)
+            </h2>
+          </div>
+          <button type="button" id="clear-feed-btn" class="text-xs text-slate-400 hover:text-slate-200">
+            साफ करा (Clear)
+          </button>
+        </div>
+
+        <!-- Scrollable Chronological Audit Log Container -->
+        <div id="odav-feed" class="flex-1 overflow-y-auto space-y-3 pt-3 pr-1 max-h-[500px]" role="log" aria-live="polite">
+          <!-- Initial Welcome Entry -->
+          <div class="p-3 rounded-xl bg-slate-900/60 border border-slate-700 text-xs flex flex-col gap-1 text-slate-400">
+            <div class="flex items-center justify-between font-semibold text-sky-400">
+              <span>🚀 SEVA AI Engine Ready</span>
+              <span>1280x720</span>
+            </div>
+            <p>सिस्टीम सुरू झाली आहे. कृपया आपली मागणी निवडा किंवा माईक दाबून बोला.</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- Human Checkpoint Dialog Modal (F19 OTP / Biometric Keypad Modal) -->
+  <div id="checkpoint-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="checkpoint-title">
+    <div class="modal-card flex flex-col gap-4" id="checkpoint-card">
+      
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between border-b border-slate-700 pb-3">
+        <div class="flex items-center gap-2">
+          <span class="text-2xl text-amber-400">🔐</span>
+          <div>
+            <h3 class="text-lg font-bold text-white" id="checkpoint-title">
+              सुरक्षा पडताळणी (Human Checkpoint)
+            </h3>
+            <p class="text-xs text-slate-400" id="checkpoint-subtitle">
+              नागरिक पडताळणी: ६ अंकी OTP प्रविष्ट करा
+            </p>
+          </div>
+        </div>
+        <button type="button" id="close-modal-x" class="text-slate-400 hover:text-white p-1 text-lg">
+          ✕
+        </button>
+      </div>
+
+      <!-- Instruction / Feedback -->
+      <p class="text-sm text-slate-300 font-medium" id="checkpoint-prompt">
+        आपल्या नोंदणीकृत मोबाईल क्रमांकावर पाठवलेला ६ अंकी OTP टाका:
+      </p>
+
+      <!-- 6-Digit OTP Box Display -->
+      <div id="otp-display" class="flex items-center justify-center gap-2.5 my-2">
+        <div class="w-12 h-14 rounded-xl bg-slate-900 border-2 border-slate-600 flex items-center justify-center text-2xl font-mono font-bold text-white otp-slot" data-index="0"></div>
+        <div class="w-12 h-14 rounded-xl bg-slate-900 border-2 border-slate-600 flex items-center justify-center text-2xl font-mono font-bold text-white otp-slot" data-index="1"></div>
+        <div class="w-12 h-14 rounded-xl bg-slate-900 border-2 border-slate-600 flex items-center justify-center text-2xl font-mono font-bold text-white otp-slot" data-index="2"></div>
+        <div class="w-12 h-14 rounded-xl bg-slate-900 border-2 border-slate-600 flex items-center justify-center text-2xl font-mono font-bold text-white otp-slot" data-index="3"></div>
+        <div class="w-12 h-14 rounded-xl bg-slate-900 border-2 border-slate-600 flex items-center justify-center text-2xl font-mono font-bold text-white otp-slot" data-index="4"></div>
+        <div class="w-12 h-14 rounded-xl bg-slate-900 border-2 border-slate-600 flex items-center justify-center text-2xl font-mono font-bold text-white otp-slot" data-index="5"></div>
+      </div>
+
+      <!-- Hidden Real Input for Accessibility / Testing -->
+      <input type="hidden" id="otp-input" value="" />
+
+      <!-- Virtual Numeric Keypad (F15 12-key Grid: 1-9, Clear, 0, Back) -->
+      <div class="keypad-grid" id="keypad">
+        <button type="button" class="keypad-btn" data-key="1">1</button>
+        <button type="button" class="keypad-btn" data-key="2">2</button>
+        <button type="button" class="keypad-btn" data-key="3">3</button>
+        <button type="button" class="keypad-btn" data-key="4">4</button>
+        <button type="button" class="keypad-btn" data-key="5">5</button>
+        <button type="button" class="keypad-btn" data-key="6">6</button>
+        <button type="button" class="keypad-btn" data-key="7">7</button>
+        <button type="button" class="keypad-btn" data-key="8">8</button>
+        <button type="button" class="keypad-btn" data-key="9">9</button>
+        <button type="button" class="keypad-btn keypad-btn-action keypad-btn-clear" id="key-clear" data-key="Clear">Clear</button>
+        <button type="button" class="keypad-btn" data-key="0">0</button>
+        <button type="button" class="keypad-btn keypad-btn-action keypad-btn-back" id="key-back" data-key="Back">⌫ Back</button>
+      </div>
+
+      <!-- Modal Action Buttons (Min 48px Touch Height) -->
+      <div class="grid grid-cols-2 gap-3 pt-3 border-t border-slate-700">
+        <button type="button" id="submit-otp-btn" class="touch-btn min-h-[52px] bg-emerald-600 hover:bg-emerald-500 font-bold rounded-xl text-white shadow-lg shadow-emerald-600/30 flex items-center justify-center gap-1.5">
+          <span>✓</span>
+          <span id="submit-otp-text">OTP सादर करा (Submit)</span>
+        </button>
+        <button type="button" id="cancel-otp-btn" class="touch-btn min-h-[52px] bg-slate-700 hover:bg-slate-600 font-bold rounded-xl text-slate-200 flex items-center justify-center gap-1.5">
+          <span>✕</span>
+          <span id="cancel-otp-text">रद्द करा (Cancel)</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 max-w-sm pointer-events-none"></div>
+
+  <!-- Kiosk Client Logic Script -->
+  <script src="/static/kiosk.js"></script>
+</body>
+</html>
