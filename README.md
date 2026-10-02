@@ -1,151 +1,41 @@
-# SEVA AI (Vernacular Digital Assistance Kiosk)
+# ⚡ SEVA AI (सेवा डिजिटल सहाय्यक)
+### Voice-First Autonomous Public Service Kiosk Engine for Rural India
 
-[![Architecture: ODAV Loop](https://img.shields.io/badge/Architecture-ODAV%20Loop-amber.svg)](https://github.com/bhargav-maker/seva)
-[![Engine: Playwright CDP](https://img.shields.io/badge/Engine-Playwright%20CDP-blue.svg)](https://github.com/bhargav-maker/seva)
-[![Brain: Qwen 2.5 7B](https://img.shields.io/badge/Brain-Qwen%202.5%207B-purple.svg)](https://github.com/bhargav-maker/seva)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-
-**SEVA AI** is an autonomous, voice-first, vernacular digital assistance kiosk platform engineered for rural Indian citizen public service centers (Gram Panchayats, Setu Kendras, CSCs).
-
-A citizen speaks in conversational **Marathi (`mr-IN`)**, **Hindi (`hi-IN`)**, or **English (`en-IN`)**, and SEVA AI autonomously executes end-to-end web transactions on government public portals via sandboxed browser automation while streaming real-time visual verification (>=20 FPS MJPEG) and localized voice confirmations.
+> Built upon [SAGAR-TAMANG/friday-tony-stark-demo](https://github.com/SAGAR-TAMANG/friday-tony-stark-demo) (All-in-One FastMCP + LiveKit)  
+> Designed for Gram Panchayats, Setu Kendras, and Common Service Centers.
 
 ---
 
-## 🏛️ System Architecture
+## 🌟 Key Features
 
-SEVA AI rejects linear procedural scripts in favor of an **Observe–Decide–Act–Verify (ODAV)** closed-circuit state engine:
-
-```
-[ Citizen Voice / Goal ]
-          │
-          ▼
-┌────────────────────────────────────────────────────────┐
-│  SEVA AI ODAV AGENT LOOP                               │
-│                                                        │
-│  1. OBSERVE : Filter top 25 interactive DOM nodes      │
-│  2. DECIDE  : Brain (Qwen 2.5 7B) picks single action  │
-│  3. ACT     : Playwright executes & streams CDP frames │
-│  4. VERIFY  : Audit state signature S(t) & stalls      │
-│               • Mutated & t < 8  ──► Proceed next step │
-│               • Action == finish ──► Breakout & Exit   │
-│               • Unchanged x 2    ──► Stall Recovery    │
-└────────────────────────────────────────────────────────┘
-```
+- **Proactive Vision Greeting:** USB webcam detects a citizen standing in front of the kiosk for 1+ seconds and speaks proactively: *"Namaste! Welcome to Gram Panchayat digital assistant. How can I help you?"*
+- **GPS-Aware Regional Language:** Automatically identifies state location on boot to greet in the native language (Marathi, Gujarati, Kannada, Tamil, Hindi, etc.) with real-time switching across all 22 Indian languages.
+- **Split-Screen Demonstration Mode:**
+  - **Left Screen:** Dark cyberpunk voice HUD with 4-state audio ring (`STANDBY` $\to$ `LISTENING` $\to$ `THINKING` $\to$ `SPEAKING`).
+  - **Right Screen:** Visible Google Chrome (`headless=False`) filling government forms and highlighting fields with glowing orange borders (`#ff5500`).
+- **Multimodal Authentication:** Citizen speaks their 10-digit mobile number and SMS OTP in their native language (*"पाच दोन आठ तीन"* $\to$ `5283`). Keypad fallback and USB fingerprint scanner (Mantra/Morpho) are fully supported.
+- **Mobile-Only App Automation:** Handles Android-only services (like *e-Pik Pahani* / ई-पीक पाहणी) via direct backend REST APIs or USB-connected Android phone via ADB.
+- **Safety Review Gate (DPDP Act):** Verbally summarizes entered details and requires citizen confirmation before clicking final "Submit" or "Pay".
+- **Dual Output Delivery:** Automatically prints a paper copy via the kiosk thermal printer and sends a digital PDF copy directly to the citizen's WhatsApp number.
+- **Offline & Weak Internet Resilience:** Answers government scheme FAQs offline and queues live requests to auto-execute when internet connection restores.
+- **15-Second Walk-Away Privacy Purge:** Automatically clears all sensitive personal data (Aadhaar, OTP, land records) if the citizen walks away for 15+ seconds.
+- **Dual-Platform Architecture:** Runs in visible desktop demonstration mode on Windows (`HP Elite 7100`, Core i3, 3.7GB RAM) and transitions seamlessly to a screenless **Raspberry Pi** appliance.
 
 ---
 
-## 🛡️ Invariant Loop Guardrails
+## 🚀 Architecture Summary
 
-1. **Step Budget Ceiling ($N = 8$):** Every session has a strict budget ceiling of 8 iterations to prevent infinite loops.
-2. **Context Compaction ($k = 3$):** Never serializes full HTML trees. Rolling window carries only Original Goal + Last 3 Step Deltas + Top 25 Filtered DOM Nodes.
-3. **Stall Recovery Gate:** Tracks state signature $S(t) = \text{SHA256}(\text{url} + \text{title} + \text{DOM})[:16]$. If $S(t) == S(t-1)$ across 2 consecutive steps, recovery scroll or clarification is triggered.
-4. **Strict JSON Schema Contract:**
-   ```json
-   {
-     "thought": "Technical deduction from observed DOM nodes",
-     "intent": "search_service | fill_form | navigate_menu | click_action | finish",
-     "action": "navigate | click | fill | scroll | wait | finish | fail",
-     "selector": "CSS selector or element anchor",
-     "value": "Input value or navigation URL",
-     "feedback": "Localized conversational audio confirmation"
-   }
-   ```
-5. **Ephemeral Privacy Purge:** All session memory and browser cookies are wiped upon session completion or reset (DPDP Act 2023 compliant).
+SEVA AI combines:
+1. **The Brain & Real-Time Voice:** FastMCP backend and LiveKit real-time voice pipeline powered by Google Gemini 2.5 Flash and Indic speech models.
+2. **The Execution Hands:** Playwright browser automation with human typing cadence and glowing field highlights.
+3. **The Mobile Bridge:** ADB connector for USB-plugged Android devices.
+4. **The Kiosk HUD:** Lightweight HTML5/CSS audio-reactive interface (<25MB RAM, 0% GPU).
 
 ---
 
-## 📁 Repository Structure
+## 📖 Complete Documentation
 
-```text
-seva/
-├── standalone_seva.py               # Complete single-file runnable kiosk platform
-├── run_seva.py                      # Multi-process kiosk runner
-├── vdak-host/                       # Edge Controller Runtime
-│   ├── app.py                       # FastAPI entrypoint & REST routes
-│   ├── config.py                    # Server, model, and timeout configuration
-│   ├── bridge/
-│   │   ├── vm_client.py             # OpenRouter Qwen 2.5 7B client & fallback engine
-│   │   └── state_manager.py         # State signature, stall detector & k=3 compaction
-│   ├── voice/
-│   │   ├── asr.py                   # Faster-Whisper + Silero VAD (anti-hallucination)
-│   │   └── tts.py                   # Offline/Native speech synthesizer
-│   └── frontend/
-│       ├── index.html               # Touch-friendly kiosk UI
-│       ├── style.css                # Accessible high-contrast styling
-│       └── app.js                   # Web Speech API & ODAV state polling
-├── vdak-vm/                         # Sandboxed Browser Execution
-│   ├── browser_controller.py        # Playwright Chromium sandbox & CDP screencaster
-│   └── agent_loop.py                # Closed-circuit ODAV execution engine
-├── mock_portals/                    # High-fidelity simulated Maharashtra portals
-│   ├── income.html                  # Aaple Sarkar Income Certificate
-│   ├── satbara.html                 # Mahabhulekh 7/12 Land Records
-│   ├── mahadbt.html                 # Farmer Crop Subsidy
-│   └── ration.html                  # AePDS Ration Services
-├── tests/
-│   └── test_prd_contracts.py        # Automated ODAV invariant validation tests
-├── ALL_CODE.md                      # Consolidated master code documentation
-├── GEMINI.md                        # Persistent Autonomous Loop Engine directives
-└── AGENTS.md                        # System agent rules & contracts
-```
-
----
-
-## 🚀 Quick Start
-
-### 1. Unified Standalone Launcher
-Run the entire platform (FastAPI server, Playwright CDP stream, and Touch UI) in a single command:
-
-```bash
-# 1. Install dependencies
-pip install fastapi uvicorn playwright httpx pydantic pydantic-settings
-
-# 2. Install Playwright browser
-playwright install chromium
-
-# 3. (Optional) Set your OpenRouter API key for cloud LLM reasoning
-export OPENROUTER_API_KEY="your_openrouter_api_key"
-
-# 4. Start the Standalone Kiosk
-python standalone_seva.py --port 8000
-```
-Open **`http://localhost:8000`** in your browser.
-
----
-
-### 2. Run Deterministic Invariant Tests
-Verify that all 6-key JSON schema constraints, $k=3$ compaction, 2-step stall detectors, and $N=8$ budget limits pass 100%:
-
-```bash
-python standalone_seva.py --test
-```
-
-Or using pytest:
-```bash
-python -m pytest tests/test_prd_contracts.py -v
-```
-
----
-
-## 📡 REST API Specification
-
-| Endpoint | Method | Description |
-| :--- | :--- | :--- |
-| `/api/start-task` | `POST` | Initializes citizen session with goal and vernacular language |
-| `/api/step` | `POST` | Executes a single discrete ODAV state cycle |
-| `/api/stream` | `GET` | Multipart HTTP MJPEG screencast stream at $\ge 20$ FPS |
-| `/api/session-state`| `GET` | Queries active session status, step count, and budget |
-| `/api/reset` | `POST` | Purges ephemeral session state and navigates to blank page |
-
----
-
-## 📜 Supported Public Welfare Portals
-
-* **Aaple Sarkar:** Income Certificate (*उत्पन्नाचा दाखला*), Domicile, Caste Certificate
-* **Mahabhulekh:** 7/12 & 8A Land Records (*७/१२ उतारा*)
-* **MahaDBT:** Farmer Agriculture Subsidies (*शेतकरी योजना*)
-* **AePDS Maharashtra:** Ration Card Services (*रेशन कार्ड*)
-
----
-
-## ⚖️ License
-MIT License. Built for public digital empowerment.
+- [`MASTER_PRD.md`](./MASTER_PRD.md): The authoritative Master Product Requirement Document.
+- [`PROJECT.md`](./PROJECT.md): Technical architecture, tool contracts, and component design.
+- [`AGENTS.md`](./AGENTS.md): Autonomous engine operational directives and invariant rules.
+- [`GEMINI.md`](./GEMINI.md): Persistent system constraints and hardware guardrails.
