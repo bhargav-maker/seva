@@ -1,0 +1,41 @@
+# SEVA AI Kiosk - Core Dependencies
+# FastMCP & LiveKit (Sagar Tamang's F.R.I.D.A.Y. Foundation)
+fastmcp>=0.1.0
+livekit-agents>=0.8.0
+livekit-plugins-openai>=0.2.0
+livekit-plugins-google>=0.2.0
+livekit-plugins-silero>=0.1.0
+
+# Web Automation
+playwright>=1.40.0
+
+# Computer Vision (Ultra-lightweight)
+opencv-python-headless>=4.8.0
+numpy>=1.24.0
+
+# Windows Integration
+pywin32>=306
+pillow>=10.0.0
+
+# PDF & Document Processing
+fitz>=0.0.1 (pymupdf)
+reportlab>=4.0.0
+
+# Network & API
+aiohttp>=3.9.0
+requests>=2.31.0
+
+# Async & Utilities
+uvicorn>=0.27.0
+fastapi>=0.109.0
+pydantic>=2.5.0
+python-dotenv>=1.0.0
+
+# Development
+pytest>=7.4.0
+pytest-asyncio>=0.23.0
+black>=23.0.0
+ruff>=0.1.0
+
+# Optional: Android ADB
+pure-python-adb>=0.2.0

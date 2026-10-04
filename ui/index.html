@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SEVA AI - ग्राम पंचायत डिजिटल सहाय्यक</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="seva-hud">
+        <header class="hud-header">
+            <div class="logo">
+                <svg class="logo-icon" viewBox="0 0 64 64" fill="none">
+                    <circle cx="32" cy="32" r="30" stroke="#ff5500" stroke-width="2"/>
+                    <path d="M32 16 L32 48 M16 32 L48 32" stroke="#ff5500" stroke-width="2" stroke-linecap="round"/>
+                    <circle cx="32" cy="32" r="8" fill="#ff5500"/>
+                </svg>
+                <span class="logo-text">SEVA AI</span>
+            </div>
+            <div class="language-pill" id="languagePill">मराठी</div>
+        </header>
+
+        <main class="hud-main">
+            <section class="audio-visualizer" id="audioVisualizer">
+                <div class="visualizer-ring">
+                    <div class="ring-segment" data-state="standby"></div>
+                    <div class="ring-segment" data-state="listening"></div>
+                    <div class="ring-segment" data-state="thinking"></div>
+                    <div class="ring-segment" data-state="speaking"></div>
+                </div>
+                <div class="visualizer-core" id="visualizerCore">
+                    <span class="status-text" id="statusText">STANDBY</span>
+                </div>
+            </section>
+
+            <section class="progress-log" id="progressLog">
+                <div class="log-header">कार्य प्रगती</div>
+                <div class="log-entries" id="logEntries">
+                    <div class="log-entry waiting">
+                        <span class="log-icon">⏳</span>
+                        <span class="log-text">नागरिकांची प्रतिक्षा...</span>
+                    </div>
+                </div>
+            </section>
+
+            <section class="system-status">
+                <div class="status-grid">
+                    <div class="status-item">
+                        <span class="status-label">RAM</span>
+                        <span class="status-value" id="ramUsage">-- MB</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">CPU</span>
+                        <span class="status-value" id="cpuUsage">--%</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">NET</span>
+                        <span class="status-value" id="netStatus">OFFLINE</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">CAM</span>
+                        <span class="status-value" id="camStatus">ACTIVE</span>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer class="hud-footer">
+            <div class="footer-left">
+                <span class="version">v1.0.0</span>
+                <span class="mode" id="modeIndicator">DEMO MODE</span>
+            </div>
+            <div class="footer-right">
+                <span class="privacy-notice">DPDP Act 2023 Compliant</span>
+            </div>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

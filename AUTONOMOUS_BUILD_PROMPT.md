@@ -25,7 +25,7 @@ Before writing code, inspect and strictly adhere to all architectural contracts 
 
 ### 3. CORE ARCHITECTURE & SYSTEM FOUNDATION
 The system MUST NOT be built as a fragmented patchwork of random libraries. It must be built directly upon:
-👉 **Base Engine:** `https://github.com/SAGAR-TAMANG/friday-tony-stark-demo` (All-in-One FastMCP + LiveKit)
+- **Base Engine:** `https://github.com/SAGAR-TAMANG/friday-tony-stark-demo` (All-in-One FastMCP + LiveKit)
 
 #### Key Architectural Pillars to Implement:
 1. **LiveKit Real-Time Multilingual Voice Pipeline:**
